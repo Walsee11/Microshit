@@ -4,16 +4,12 @@
 #include "time.h"
 #include <ESP_Google_Sheet_Client.h>
 
-// For SD/SD_MMC mounting helper
-#include <GS_SDHelper.h>
+#define WIFI_SSID ""
+#define WIFI_PASSWORD ""
 
-#define WIFI_SSID "PMD"
-#define WIFI_PASSWORD "Dung3011"
+// DHT sensor
+DHT dht(21, DHT11);
 
-#define DHTPIN 21
-#define DHTTYPE DHT11
-
-DHT dht(DHTPIN,DHTTYPE);
 // Google Project ID
 #define PROJECT_ID "microprocessor-425215"
 
@@ -21,21 +17,10 @@ DHT dht(DHTPIN,DHTTYPE);
 #define CLIENT_EMAIL "datalogging@microprocessor-425215.iam.gserviceaccount.com"
 
 // Service Account's private key
-const char PRIVATE_KEY[] PROGMEM = "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDqz7Lew1nRfkog\nzueKoPrqgS5BLDrJIeSq7elvUtDgZ62BZ06qcetO3gAxnpmZifAy"
- "+BMBGZGJZOPL\nwCG2UHH4OC6fP+mdVwJr7/TjhlfMBZOiEnkyQVW/xiF944vU9ToHEX2oBPGL4jrF\nbYLbdZHGL8+onZoHFDu8dSTTr0lZxyZUQHKtjbat9jjmlDfjZABXs7U5LQZ9a4pF\nV"
- "+ecQnw3I0c3U9fv0YIylpQu/VpdjpWBZXbDqkt7BDNNRf5SDIMgh7F9oLvIkBuH\n6ZN9T61yaLBUdzbwj8gB5/TR1iYOnVAXRaIZ/0Fpk0xEa71/wm/8ApIoJofWXEkv\nXAHJaZA9AgMBAAECggEAL"
- "+5PPyElyblrhMhvY7EqHunZKQUQB+QDAzA21RpU2GXZ\neT9/A5Rm+c2fwQE0re6GCUVxzajsOB1P0ZTJ3OcNaKOBQtEfTRaIgEN2W+ZdsCAY\nS35VXoCPMisNxZ6H+ePH4U789SnzK4B1yjypOEaGx"
- "+uVCkCHgzfqXLUV3B8dDDXS\nXQOd2t5SIC/6g/RduZAko44Mi2+pscfOoilbeYcyyrEDeHDrZjrjs7z7Pzr5sWTK\nC47Uf9BCOaTwLisvDJzdf5dJNJ7DxjYL/mlnYUHUZGvB341ZIvzNQVYmKCj3qsvV"
- "\nbDDDiBMAil5CDzXt+xvRDg/TuXJMUURxZdPCjlUueQKBgQD5kVR46xMS9Qx0HJKh\nPudQWaaS9roAb6AFKNFYpNCZQg73YFzj6WYbL+jMHnYCKtzjeS+KB4c23itDHqpb"
- "\nUPl3RzveSs4Yfz3eKuJIXtXkJnM0H/0xIT6furEV2dCgv4iXCMCjToZTeuzdaJTv\nE2zRMPrWIqQMDjbJ4LAHi1VMNQKBgQDw3QE/gb9Qm89I+CB4jpGqoCuHpMqUPfrk"
- "\ntkL8WgHynOc5SKGeP63jR2JQLTqTfUrYErWScBDEMcbmnxfsKn3eFJz2OXV4YOyp\nGe3ewI0NvM1zh8SKWcTcK7BM2RrFIzrvDJe+nDIUfU4gGqY2AJAd3qRwxv70e4Ph\nAJVSikjk6QKBgEurbABpzlO"
- "+JzOBglgPuZUcSaxf0M/XCJ7n3GnTN0hwxhbtidy0\n5PezVBOn3MIVevohwW9Jjw7s2BM21hJv/+PRnm5tIgY9dmXJfOjSkGnn2qBgXqWp\n3dISiiUE8QP8bw7UYYxif8oKCI2taxL"
- "+Qc0/255XzIO3P5eAX/85mPhNAoGARmUx\nQjBXi+Wd1YO/abyxUh7x2fkNw/nBZCrotPxRaWj2I0XZBnkyByUL1McDQavyvefp\n7VyXad/qc+i3gyyAEPIRVd1BOeeKA3oyjVHVZ9hwa32YsZ6+7GJQaoVhT5CWXttd"
- "\nVjYsZNSiirt/LHVJqZEymktupGGdD5uuCKul1lECgYBMrSwWJg1MWMtW9JH1881U\nIBkTx+fvYOBL1ah5dChG02Dlah9JF8NN2bHwA29BgXt7wFZ8e8Ujj9PBaUBusFfc\neLgwFX7vJ/ixJ464cXm"
- "+y/L08Mc8ovOXsrR945HWL/ZHc/0txp8ihGf6k2TgU48+\nrOZs9YQygAqsiXkX7ka33g==\n-----END PRIVATE KEY-----\n";
+const char PRIVATE_KEY[] PROGMEM = "-----BEGIN PRIVATE KEY-----\n Insert your key \n-----END PRIVATE KEY-----\n";
 
 // The ID of the spreadsheet where you'll publish the data
-const char spreadsheetId[] = "1EfVcSzhqw1yhXdVQswK3VG-3hJliPp4-YN0LaH6CXUA";
+const char spreadsheetId[] = "";
 
 // Timer variables
 unsigned long lastTime = 0;  
@@ -44,12 +29,9 @@ unsigned long timerDelay = 30000;
 // Token Callback function
 void tokenStatusCallback(TokenInfo info);
 
-// BME280 I2C
-
 // Variables to hold sensor readings
 float temp;
 float hum;
-
 
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
@@ -70,15 +52,12 @@ unsigned long getTime() {
 }
 
 void setup(){
-
     Serial.begin(115200);
     Serial.println();
     Serial.println();
 
     //Configure time
     configTime(0, 0, ntpServer);
-
-    // Initialize BME280 sensor 
 
     Serial.println(F("DHT sensor test!"));
 
@@ -87,7 +66,6 @@ void setup(){
     // Connect to Wi-Fi
     WiFi.setAutoReconnect(true);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  
     Serial.print("Connecting to Wi-Fi");
     while (WiFi.status() != WL_CONNECTED) {
       Serial.print(".");
@@ -124,11 +102,11 @@ void loop(){
         Serial.println("----------------------------");
 
         FirebaseJson valueRange;
-
-
+     
         temp = dht.readTemperature();
         hum = dht.readHumidity();
         float f = dht.readTemperature(true);
+     
         // Get timestamp
         epochTime = getTime();
 
