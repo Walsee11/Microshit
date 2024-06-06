@@ -1,8 +1,8 @@
 #include <WiFi.h>
-#include <Adafruit_Sensor.h>
 #include "DHT.h"
 #include "time.h"
 #include <ESP_Google_Sheet_Client.h>
+// #include <GS_SDHelper.h>
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
@@ -86,6 +86,18 @@ void setup(){
 
     // Begin the access token generation for Google API authentication
     GSheet.begin(CLIENT_EMAIL, PROJECT_ID, PRIVATE_KEY);
+
+    String value1 = "Time", value2 = "Temperature (°C)", value3 = "Humidity (%)";
+    FirebaseJson data1, data2, data3;
+    data1.add("majorDimension", "COLUMNS");
+    data1.set("values/[0]/[0]", value1);
+    GSheet.values.append(&response, spreadsheetId, "Sheet1!A1", &data1);
+    data2.add("majorDimension", "COLUMNS");
+    data2.set("values/[0]/[0]", value2);
+    GSheet.values.append(&response, spreadsheetId, "Sheet1!B1", &data2);
+    data3.add("majorDimension", "COLUMNS");
+    data3.set("values/[0]/[0]", value3);
+    GSheet.values.append(&response, spreadsheetId, "Sheet1!C1", &data1);
 }
 
 void loop(){
@@ -115,11 +127,11 @@ void loop(){
           return;
         }
 
-        Serial.print(F("Humidity: "));
-        Serial.print(hum);
-        Serial.print(F("% Temperature: "));
-        Serial.print(temp);
-        Serial.print(F("°C "));
+        //Serial.print(F("Humidity: "));
+        //Serial.print(hum);
+        //Serial.print(F("% Temperature: "));
+        //Serial.print(temp);
+        //Serial.print(F("°C "));
 
         valueRange.add("majorDimension", "COLUMNS");
         valueRange.set("values/[0]/[0]", epochTime);
@@ -128,7 +140,7 @@ void loop(){
 
         // For Google Sheet API ref doc, go to https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append
         // Append values to the spreadsheet
-        bool success = GSheet.values.append(&response /* returned response */, spreadsheetId /* spreadsheet Id to append */, "Sheet1!A1" /* range to append */, &valueRange /* data range to append */);
+        bool success = GSheet.values.append(&response, spreadsheetId, "Sheet1!A1", &valueRange);
         if (success){
             response.toString(Serial, true);
             valueRange.clear();
