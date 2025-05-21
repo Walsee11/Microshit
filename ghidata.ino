@@ -54,6 +54,7 @@ float  distanceCm;
 DHT dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
+int count=0;
 
 // NTP server to request epoch time
 const char* ntpServer = "vn.pool.ntp.org";
@@ -80,7 +81,7 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   // Config time
-  configTime(7, 0, ntpServer);
+  configTime(7, 0, ntpServer); // 7* 3600 thay vì hour+7
 
   GSheet.printf("ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
 
@@ -134,13 +135,13 @@ void loop() {
 
   bool ready = GSheet.ready();
 
-  if (ready && millis() - lastTime > timerDelay) {
+  if (ready && millis() - lastTime > timerDelay & count < 30) {
     lastTime = millis();
 
     FirebaseJson response;
     
     Serial.println("\n Append spreadsheet values...");
-    Serial.println("------------------------------");
+    Serial.println("------------------------------");  
 
     // DHT-PMD playing :p
     temp = dht.readTemperature();
@@ -206,6 +207,7 @@ void loop() {
     if (success){
       response.toString(Serial, true);
       valueRange.clear();
+      count++;
     }
     else{
       Serial.println(GSheet.errorReason());
